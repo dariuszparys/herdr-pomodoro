@@ -19,6 +19,8 @@ notification when each phase ends.
   after a restart.
 - Time keeps counting when the window is closed, and it survives a Herdr
   restart.
+- An optional 🍅 for the status bar that shows the time left and opens the
+  window when clicked.
 
 The mod doesn't use the network, doesn't run programs and only reads Herdr's
 own shared state.
@@ -93,10 +95,65 @@ Click ⚙ in the window. Changes save straight away and stay after a restart.
 A phase that is running or paused keeps its length. Your change applies from
 the next phase.
 
+## Status bar 🍅 (optional)
+
+![The 🍅 in the status bar](preview-status.png)
+
+The `pomodoro-status` mod puts a 🍅 at the right end of the status bar. Click it
+to open or close the timer window.
+
+| Timer | The 🍅 shows |
+|---|---|
+| Not started | 🍅 |
+| Running | 🍅 with a pulsing dot and the time left, e.g. `Focus 18:42` |
+| Paused | `Focus 22:45 · paused` |
+| Finished while the window was closed | `time's up`: click to open the window and get the alert |
+
+Herdr's own layouts are read-only, so you add the 🍅 to your own copy of a
+layout. These steps use the default `main` layout:
+
+1. Copy the mod:
+
+   ```sh
+   cp -R herdr-pomodoro/mods/pomodoro-status ~/.config/herdr-app/mods/
+   ```
+
+2. Make your own copy of the layout. This also switches to it:
+
+   ```sh
+   herdr-app do layout.clone '{"name":"main","as":"my-main"}'
+   ```
+
+3. In `~/.config/herdr-app/layouts/my-main.json`, find the block with
+   `"id": "status"` and replace it with this row. It keeps Herdr's own status
+   bar and adds the 🍅 beside it:
+
+   ```json
+   {
+     "id": "status-row",
+     "type": "row",
+     "size": { "px": 28 },
+     "resizable": false,
+     "children": [
+       { "id": "status", "type": "block", "content": { "mod": "workspace-status" } },
+       { "id": "pomodoro-status", "type": "block", "size": { "px": 240 }, "content": { "mod": "pomodoro-status" } }
+     ]
+   }
+   ```
+
+4. Save. The window updates at once. If nothing changes, look for a
+   `layout.error` file in `~/.config/herdr-app`.
+
+Your copy of the layout won't get Herdr's future changes to `main`. The status
+bar itself is still Herdr's mod and does get them. To go back, switch layouts
+with ⌘⇧L or the command palette.
+
 ## Uninstall
 
 Delete `~/.config/herdr-app/mods/pomodoro` and remove the `cmd-alt-p` line
-from `keys.json`.
+from `keys.json`. If you added the status bar 🍅, also delete
+`~/.config/herdr-app/mods/pomodoro-status` and your copy of the layout
+(`layouts/my-main.json`), or put its original `status` block back.
 
 ## Build it yourself
 

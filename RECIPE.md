@@ -89,6 +89,24 @@ and the gear becomes ← (tooltip "Back"). Below it:
   current phase is running or paused.
 - Two pills: Defaults (styled like ↺) and Done (styled like the main button).
 
+Status bar 🍅 (optional, `pomodoro-status`), a 240 px block at the right end
+of the status bar:
+
+- It fills its block with the status bar's look: `chrome` background, a 1 px
+  `border` top edge, 11.8 px `muted` text, items aligned right with 14 px
+  padding on the right. Next to Herdr's `workspace-status` it reads as one bar.
+- The item is a 20 px tall, 6 px rounded hit area with 6 px horizontal padding
+  and 6 px gaps. It holds 🍅 and, when there is something to show:
+  - Running: a 6 px dot in the phase colour (`#ff5f6d` focus, `#2fd69a` short,
+    `#7f7fd5` long) and `Focus 18:42`, `Break 04:11` or `Long break 12:00` in
+    Geist Mono, `foreground`.
+  - Paused: `Focus 22:45 · paused` in `muted`.
+  - Running at 0 (the window closed, so nothing finished the phase):
+    `time's up`.
+  - Not started: just 🍅.
+- Hover gives it a `hover` background and `foreground` text. Its tooltip is
+  "Pomodoro".
+
 ## How it behaves
 
 - **Start / Pause / Resume** run and pause the current phase. Pausing keeps
@@ -121,6 +139,10 @@ and the gear becomes ← (tooltip "Back"). Below it:
   included `keys.json`) or `herdr-app do mod.open --name pomodoro`. The window
   remembers where it was dropped and comes back after a restart until closed.
 - The 🍅 count resets at local midnight.
+- **Status bar 🍅**: clicking it runs `mod.open {name: "pomodoro"}`, which opens
+  or closes the window. While running, its dot pulses (opacity 0.3 → 1, 1.4 s)
+  and the time updates once a second. It only reads the timer; it never
+  finishes a phase, plays a sound or notifies.
 
 ## Built from
 
@@ -153,6 +175,16 @@ and the gear becomes ← (tooltip "Back"). Below it:
   - Every button stops `on_mouse_down("left")` propagation so it doesn't drag
     the window. The card itself calls `focus()` on press.
 - `keys.json`: `"global": {"cmd-alt-p": "mod.open:pomodoro"}`.
+- `mods/pomodoro-status/mod.json`: `{"place": "none", "title": "Pomodoro status"}`.
+- `mods/pomodoro-status/main.js`: one `View`. It reads `shared("pomodoro")`,
+  works out the time left the same way as the window, and calls
+  `run("mod.open", {name: "pomodoro"})` on click. `cx.timer.every(1000)` redraws
+  only while `running`; shared-state changes redraw it anyway. It uses
+  `theme`, `shared`, `run` and `checking` from `herdr`.
+- Placing the 🍅 needs the person's own copy of a layout
+  (`layout.clone {name: "main", as: "my-main"}`). Its `status` block becomes a
+  28 px row, not resizable, holding Herdr's unchanged `workspace-status` block
+  and a 240 px `pomodoro-status` block. The README has the JSON.
 - No programs, no network, no files outside Herdr's shared state.
 
 ## Watch out
@@ -170,10 +202,21 @@ and the gear becomes ← (tooltip "Back"). Below it:
 - Keep `init()` side effects behind `if (checking()) return;`.
 - `nextCommand()` accepts `toggle`, `reset` and `skip`, but the included
   `keys.json` doesn't bind them, and binding them is untested.
-- Optional extra, not included: a 🍅 in the status bar that shows the time
-  left and opens the window. Clone `workspace-status`, read
-  `shared("pomodoro")`, redraw every second only while `running`, and point a
-  cloned layout's status block at the clone.
+- Don't put the 🍅 into a clone of Herdr's `workspace-status`: that copies
+  Herdr's code and stops it getting Herdr's updates. Keep it a separate block
+  beside the unchanged status bar.
+- A layout block needs a fixed width, so `pomodoro-status` is 240 px (enough
+  for `Long break 12:00 · paused`) and aligns its content right. The unused
+  space on its left matches the status bar, so it doesn't show.
+- `pomodoro-status` must paint its own `chrome` background and top border, or
+  it shows as a gap in the bar.
+- The 🍅 and its text must not shrink or wrap (`flex_none`,
+  `whitespace_nowrap`), or the longest text drops out of the block.
+- Write a mod's `mod.json` (with `"place": "none"`) before its `main.js`. Herdr
+  docks a mod folder it sees for the first time into the shown layout. Without
+  `mod.json` it docks it as a full-height 320 px column on the right. In a
+  personal layout this goes into the layout file itself; remove the node and
+  apply the file with `layout.set`.
 
 ## Done when
 
@@ -192,3 +235,6 @@ and the gear becomes ← (tooltip "Back"). Below it:
   clear.
 - Settings: − / + stay within each range, Defaults restores 25/5/15/4, and the
   values survive a restart.
+- With the status row in place, the status bar looks like one continuous bar
+  with 🍅 at its right end. While a phase runs, it shows the phase and a
+  countdown that matches the window. Clicking it opens and closes the window.
