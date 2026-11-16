@@ -7,6 +7,11 @@ notification when each phase ends.
 
 ![Pomodoro](preview.png)
 
+With the optional [status bar 🍅](#status-bar--optional), the time left also
+shows at the bottom right of the window:
+
+![The 🍅 in the status bar](preview-status.png)
+
 ## Features
 
 - A focus/short break/long break cycle, with a long break after every 4 focus
